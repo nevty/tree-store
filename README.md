@@ -1,54 +1,39 @@
-# .
+## Описание
 
-This template should help get you started developing with Vue 3 in Vite.
+Реализация класса TreeStore для работы с древовидными структурами данных и визуализация через AG-Grid в Vue 3.
 
-## Recommended IDE Setup
+## Технологии
 
-[VS Code](https://code.visualstudio.com/) + [Vue (Official)](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+- **Vue 3** - фреймворк
+- **TypeScript** - типизация
+- **AG-Grid Enterprise** - таблица с группировкой
+- **Tailwind CSS** - стилизация
+- **Vite** - сборщик
 
-## Recommended Browser Setup
+## Установка и запуск
 
-- Chromium-based browsers (Chrome, Edge, Brave, etc.):
-  - [Vue.js devtools](https://chromewebstore.google.com/detail/vuejs-devtools/nhdogjmejiglipccpnnnanhbledajbpd) 
-  - [Turn on Custom Object Formatter in Chrome DevTools](http://bit.ly/object-formatters)
-- Firefox:
-  - [Vue.js devtools](https://addons.mozilla.org/en-US/firefox/addon/vue-js-devtools/)
-  - [Turn on Custom Object Formatter in Firefox DevTools](https://fxdx.dev/firefox-devtools-custom-object-formatters/)
-
-## Type Support for `.vue` Imports in TS
-
-TypeScript cannot handle type information for `.vue` imports by default, so we replace the `tsc` CLI with `vue-tsc` for type checking. In editors, we need [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) to make the TypeScript language service aware of `.vue` types.
-
-## Customize configuration
-
-See [Vite Configuration Reference](https://vite.dev/config/).
-
-## Project Setup
-
-```sh
+```bash
+# Установка зависимостей
 pnpm install
-```
 
-### Compile and Hot-Reload for Development
-
-```sh
+# Запуск dev сервера
 pnpm dev
-```
 
-### Type-Check, Compile and Minify for Production
-
-```sh
+# Сборка для продакшена
 pnpm build
 ```
 
-### Run Unit Tests with [Vitest](https://vitest.dev/)
+## Структура проекта
 
-```sh
-pnpm test:unit
 ```
-
-### Lint with [ESLint](https://eslint.org/)
-
-```sh
-pnpm lint
+mstroy-app/
+├── src/
+│   ├── components/
+│   │   └── TreeGrid.vue      # Компонент с AG-Grid
+│   ├── TreeStore.ts           # Класс для работы с деревом
+│   ├── App.vue                # Главный компонент
+│   ├── main.ts                # Точка входа
+│   └── style.css              # Глобальные стили
+├── package.json
+└── vite.config.ts
 ```
