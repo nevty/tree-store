@@ -68,16 +68,22 @@ export class TreeStore<T extends object = {}> {
 
   getAllParents(id: IdType, orderRootToChild: boolean = false): TreeItemWithProps<T>[] {
     const result: TreeItemWithProps<T>[] = []
+    const visited = new Set<IdType>()
     let currentItem = this.items.get(id)
 
     if (!currentItem) return result
 
     result.push(currentItem)
+    visited.add(currentItem.id)
 
     while (currentItem?.parent != null) {
+      if (visited.has(currentItem.parent)) break
+      
       const parentItem = this.items.get(currentItem.parent)
       if (!parentItem) break
+      
       result.push(parentItem)
+      visited.add(parentItem.id)
       currentItem = parentItem
     }
 
