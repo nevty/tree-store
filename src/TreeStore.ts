@@ -1,105 +1,128 @@
+export type IdType = string | number
+
 export interface TreeItem {
-  id: string | number
-  parent: string | number | null
+  id: IdType
+  parent: IdType | null
   name?: string
   value?: string
-  [key: string]: string | number | null | undefined
 }
 
-export class TreeStore {
-  private items: Map<string | number, TreeItem>
-  private childrenMap: Map<string | number, (string | number)[]>
+export type TreeItemWithProps<T extends object = {}> = TreeItem & T
 
-  constructor(data: TreeItem[]) {
+export class TreeStore<T extends object = {}> {
+  private items: Map<IdType, TreeItemWithProps<T>>
+  private childrenMap: Map<IdType, IdType[]>
+
+  constructor(data: TreeItemWithProps<T>[]) {
     this.items = new Map()
     this.childrenMap = new Map()
 
-    data.forEach((item) => {
+    for (const item of data) {
       this.items.set(item.id, item)
-    })
-
-    this.buildChildrenMap()
+      this._linkToParent(item)
+    }
   }
 
-  private buildChildrenMap(): void {
-    this.childrenMap.clear()
-
-    this.items.forEach((item) => {
-      const parentId = item.parent
-      if (parentId !== null && parentId !== undefined) {
-        if (!this.childrenMap.has(parentId)) {
-          this.childrenMap.set(parentId, [])
-        }
-        this.childrenMap.get(parentId)!.push(item.id)
+  private _linkToParent(item: TreeItemWithProps<T>): void {
+    if (item.parent != null) {
+      if (!this.childrenMap.has(item.parent)) {
+        this.childrenMap.set(item.parent, [])
       }
-    })
+      this.childrenMap.get(item.parent)!.push(item.id)
+    }
   }
 
-  getChildren(id: string | number): TreeItem[] {
-    const childIds = this.childrenMap.get(id) || []
-    return childIds.map((childId) => this.items.get(childId)!).filter(Boolean)
+  private _unlinkFromParent(item: TreeItemWithProps<T>): void {
+    if (item.parent != null) {
+      const siblings = this.childrenMap.get(item.parent)
+      if (siblings) {
+        const index = siblings.indexOf(item.id)
+        if (index > -1) {
+          siblings.splice(index, 1)
+        }
+      }
+    }
   }
 
-  getAllChildren(id: string | number): TreeItem[] {
-    const result: TreeItem[] = []
-    const directChildren = this.getChildren(id)
+  getChildren(id: IdType): TreeItemWithProps<T>[] {
+    return (this.childrenMap.get(id) || [])
+      .map((childId) => this.items.get(childId))
+      .filter((item): item is TreeItemWithProps<T> => item !== undefined)
+  }
 
-    directChildren.forEach((child) => {
-      result.push(child)
-      const nestedChildren = this.getAllChildren(child.id)
-      result.push(...nestedChildren)
-    })
+  getAllChildren(id: IdType): TreeItemWithProps<T>[] {
+    const result: TreeItemWithProps<T>[] = []
+    const childIds = this.childrenMap.get(id)
+    if (!childIds) return result
+
+    for (const childId of childIds) {
+      const child = this.items.get(childId)
+      if (child) {
+        result.push(child)
+        result.push(...this.getAllChildren(child.id))
+      }
+    }
 
     return result
   }
 
-  getAllParents(id: string | number): TreeItem[] {
-    const result: TreeItem[] = []
-    const item = this.items.get(id)
+  getAllParents(id: IdType, orderRootToChild: boolean = false): TreeItemWithProps<T>[] {
+    const result: TreeItemWithProps<T>[] = []
+    let currentItem = this.items.get(id)
 
-    if (!item) return result
+    if (!currentItem) return result
 
-    result.push(item)
+    result.push(currentItem)
 
-    let currentItem = item
-    while (currentItem.parent !== null && currentItem.parent !== undefined) {
+    while (currentItem?.parent != null) {
       const parentItem = this.items.get(currentItem.parent)
       if (!parentItem) break
       result.push(parentItem)
       currentItem = parentItem
     }
 
-    return result
+    return orderRootToChild ? result.reverse() : result
   }
 
-  addItem(item: TreeItem): void {
+  addItem(item: TreeItemWithProps<T>): void {
     this.items.set(item.id, item)
-    this.buildChildrenMap()
+    this._linkToParent(item)
   }
 
-  removeItem(id: string | number): void {
-    const allChildren = this.getAllChildren(id)
+  removeItem(id: IdType): void {
+    const item = this.items.get(id)
+    if (!item) return
 
-    allChildren.forEach((child) => {
-      this.items.delete(child.id)
-    })
+    const childIds = this.childrenMap.get(id)
+    if (childIds) {
+      for (const childId of [...childIds]) {
+        this.removeItem(childId)
+      }
+      this.childrenMap.delete(id)
+    }
+
+    this._unlinkFromParent(item)
 
     this.items.delete(id)
-    this.buildChildrenMap()
   }
 
-  updateItem(item: TreeItem): void {
-    if (this.items.has(item.id)) {
-      this.items.set(item.id, item)
-      this.buildChildrenMap()
+  updateItem(item: TreeItemWithProps<T>): void {
+    const oldItem = this.items.get(item.id)
+    if (!oldItem) return
+
+    if (oldItem.parent !== item.parent) {
+      this._unlinkFromParent(oldItem)
+      this._linkToParent(item)
     }
+
+    this.items.set(item.id, item)
   }
 
-  getAllItems(): TreeItem[] {
+  getAllItems(): TreeItemWithProps<T>[] {
     return Array.from(this.items.values())
   }
 
-  getItem(id: string | number): TreeItem | undefined {
+  getItem(id: IdType): TreeItemWithProps<T> | undefined {
     return this.items.get(id)
   }
 }

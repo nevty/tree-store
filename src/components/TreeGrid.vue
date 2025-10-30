@@ -39,18 +39,18 @@ import {
   type GridReadyEvent,
 } from 'ag-grid-community'
 import { AllEnterpriseModule } from 'ag-grid-enterprise'
-import { TreeStore, type TreeItem } from '../TreeStore'
+import { TreeStore, type TreeItemWithProps } from '../TreeStore'
 
 ModuleRegistry.registerModules([AllCommunityModule, AllEnterpriseModule])
 
 let gridApi: GridApi
 
-const rowData = ref<TreeItem[]>([])
+const rowData = ref<TreeItemWithProps[]>([])
 const groupDefaultExpanded = ref(0)
 
-const columnDefs = ref<ColDef[]>([
+const columnDefs = ref<ColDef<TreeItemWithProps>[]>([
   {
-    field: 'rowNumber',
+    colId: 'rowNumber',
     headerName: '№ п/п',
     width: 100,
     valueGetter: (params) => {
@@ -61,7 +61,7 @@ const columnDefs = ref<ColDef[]>([
     },
   },
   {
-    field: 'category',
+    colId: 'category',
     headerName: 'Категория',
     width: 150,
     valueGetter: (params) => {
@@ -87,13 +87,13 @@ const columnDefs = ref<ColDef[]>([
   },
 ])
 
-const defaultColDef = ref<ColDef>({
+const defaultColDef = ref<ColDef<TreeItemWithProps>>({
   sortable: true,
   filter: true,
   resizable: true,
 })
 
-const autoGroupColumnDef = ref<ColDef>({
+const autoGroupColumnDef = ref<ColDef<TreeItemWithProps>>({
   headerName: 'Иерархия',
   minWidth: 300,
   cellRendererParams: {
@@ -101,16 +101,11 @@ const autoGroupColumnDef = ref<ColDef>({
   },
 })
 
-const getDataPath = (data: TreeItem) => {
-  const path: (string | number)[] = []
+const getDataPath = (data: TreeItemWithProps) => {
   const store = new TreeStore(rowData.value)
-  const parents = store.getAllParents(data.id).reverse()
+  const parents = store.getAllParents(data.id, true) // orderRootToChild = true
 
-  parents.forEach((parent) => {
-    path.push(parent.name || parent.id)
-  })
-
-  return path
+  return parents.map((parent) => String(parent.name || parent.id))
 }
 
 const onGridReady = (params: GridReadyEvent) => {
@@ -130,7 +125,7 @@ const collapseAll = () => {
 }
 
 onMounted(() => {
-  const sampleData: TreeItem[] = [
+  const sampleData: TreeItemWithProps[] = [
     { id: 1, parent: null, name: 'Проект 1', value: 'Основной проект' },
     { id: 2, parent: 1, name: 'Модуль A', value: 'Модуль разработки' },
     { id: 3, parent: 1, name: 'Модуль B', value: 'Модуль тестирования' },
